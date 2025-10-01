@@ -9,6 +9,7 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.util.Timeout;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,11 +37,19 @@ public class HttpClient {
                 System.out.println("Message body: " + jsonResponse);
                 System.out.println();
 
+                System.out.println("Факты, при которых ");
                 List<FactAboutCat> facts = mapper.readValue(jsonResponse, new TypeReference<List<FactAboutCat>>() {
                 });
                 facts.stream()
                         .filter(v -> v.getUpvotes() != null && v.getUpvotes() > 0)
-                        .forEach(System.out::println);
+                        .forEach(v -> {
+                            System.out.println("id=" + v.getId());
+                            System.out.println("text=" + v.getText());
+                            System.out.println("type=" + v.getType());
+                            System.out.println("user=" + v.getUser());
+                            System.out.println("upvotes=" + v.getUpvotes());
+                            System.out.println();
+                        });
             } finally {
                 response.close();
                 httpClient.close();
@@ -55,9 +64,9 @@ public class HttpClient {
         return HttpClientBuilder.create()
                 .setUserAgent("MyApp/1.0")
                 .setDefaultRequestConfig(RequestConfig.custom()
-                        .setConnectTimeout(5000)    // максимальное время ожидание подключения к серверу
-                        .setSocketTimeout(30000)    // максимальное время ожидания получения данных
-                        .setRedirectsEnabled(false) // возможность следовать редиректу в ответе
+                        .setConnectionRequestTimeout(Timeout.ofSeconds(5)) // 5 секунд
+                        .setResponseTimeout(Timeout.ofSeconds(30))   // 30 секунд
+                        .setRedirectsEnabled(false)
                         .build())
                 .build();
     }
